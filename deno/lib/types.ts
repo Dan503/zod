@@ -295,15 +295,15 @@ export abstract class ZodType<
   refine<RefinedOutput extends Output>(
     check: (arg: Output) => arg is RefinedOutput,
     message?: string | CustomErrorParams | ((arg: Output) => CustomErrorParams)
-  ): ZodEffects<this, RefinedOutput, Input>;
+  ): ZodEffects<this, RefinedOutput, Input> & this;
   refine(
     check: (arg: Output) => unknown | Promise<unknown>,
     message?: string | CustomErrorParams | ((arg: Output) => CustomErrorParams)
-  ): ZodEffects<this, Output, Input>;
+  ): ZodEffects<this, Output, Input> & this;
   refine(
     check: (arg: Output) => unknown,
     message?: string | CustomErrorParams | ((arg: Output) => CustomErrorParams)
-  ): ZodEffects<this, Output, Input> {
+  ): ZodEffects<this, Output, Input> & this {
     const getIssueProperties = (val: Output) => {
       if (typeof message === "string" || typeof message === "undefined") {
         return { message };
@@ -342,15 +342,15 @@ export abstract class ZodType<
   refinement<RefinedOutput extends Output>(
     check: (arg: Output) => arg is RefinedOutput,
     refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)
-  ): ZodEffects<this, RefinedOutput, Input>;
+  ): ZodEffects<this, RefinedOutput, Input> & this;
   refinement(
     check: (arg: Output) => boolean,
     refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)
-  ): ZodEffects<this, Output, Input>;
+  ): ZodEffects<this, Output, Input> & this;
   refinement(
     check: (arg: Output) => unknown,
     refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)
-  ): ZodEffects<this, Output, Input> {
+  ): ZodEffects<this, Output, Input> & this {
     return this._refinement((val, ctx) => {
       if (!check(val)) {
         ctx.addIssue(
@@ -367,26 +367,30 @@ export abstract class ZodType<
 
   _refinement(
     refinement: RefinementEffect<Output>["refinement"]
-  ): ZodEffects<this, Output, Input> {
-    return new ZodEffects({
+  ): ZodEffects<this, Output, Input> & this {
+    const zodEffects = new ZodEffects({
       schema: this,
       typeName: ZodFirstPartyTypeKind.ZodEffects,
       effect: { type: "refinement", refinement },
     });
+    return {
+      ...zodEffects.sourceType(),
+      ...zodEffects,
+    };
   }
 
   superRefine<RefinedOutput extends Output>(
     refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput
-  ): ZodEffects<this, RefinedOutput, Input>;
+  ): ZodEffects<this, RefinedOutput, Input> & this;
   superRefine(
     refinement: (arg: Output, ctx: RefinementCtx) => void
-  ): ZodEffects<this, Output, Input>;
+  ): ZodEffects<this, Output, Input> & this;
   superRefine(
     refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>
-  ): ZodEffects<this, Output, Input>;
+  ): ZodEffects<this, Output, Input> & this;
   superRefine(
     refinement: (arg: Output, ctx: RefinementCtx) => unknown | Promise<unknown>
-  ): ZodEffects<this, Output, Input> {
+  ): ZodEffects<this, Output, Input> & this {
     return this._refinement(refinement);
   }
 
